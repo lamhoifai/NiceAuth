@@ -195,10 +195,9 @@ class UsersController extends NiceAuthAppController {
     	}
 
     public function logout(){
-        $this->Auth->logout();
         $this->Session->setFlash('You have been successfully logged out.');
-        $this->redirect('/');
-    	}
-	}
+        $this->redirect($this->Auth->logout());
+    }
+}
 
 ?>
