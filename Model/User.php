@@ -47,33 +47,53 @@ class User extends NiceAuthAppModel {
     	}
 	
 	var $validate = array(
-		'username' => array( 
-			'alphaNumeric' => array(
-				//'rule' => 'alphaNumeric',
-				'rule' => 'isUnique',
-				'required' => true,
-				'message' => 'This username already exists'
-				),
-			'between' => array(
-				'rule' => array('between', 5, 400),
-				'message' => 'Must be between 5 and 25 characters'
-				)
-			),
+//		'username' => array(
+//			'alphaNumeric' => array(
+//				//'rule' => 'alphaNumeric',
+//				'rule' => 'isUnique',
+//				'required' => true,
+//				'message' => 'This username already exists'
+//				),
+//			'between' => array(
+//				'rule' => array('between', 5, 400),
+//				'message' => 'Must be between 5 and 25 characters'
+//				)
+//			),
 		'email' => array(
-			'rule' => 'email',
-			'message' => 'You must enter a valid email address'
-			),
+            'alphaNumeric' => array(
+                //'rule' => 'alphaNumeric',
+                'rule' => 'isUnique',
+                'required' => true,
+                'message' => 'This username already exists'
+            ),
+            'isEmail' => array(
+                'rule' => 'email',
+                'message' => 'You must enter a valid email address'
+            )
+
+        ),
 		'password' => array(
 			'rule' => array('minLength', 8),
 			'message' => 'Must be at least 8 characters long'
-			)
+			),
+        'repeat_password' => array(
+            'checkPassword' => array(
+                'required' => true,
+                'rule' => array('checkpasswords'),
+                'message' => 'Both password fields must be filled out'
+            )
+        )
 		);
+
+    public function checkpasswords() {
+        return $this->data['User']['repeat_password'] == $this->data['User']['password'];
+    }
 
 	public function beforeSave($options = array()) {
     	if (isset($this->data[$this->alias]['password'])) {
         	$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
-    		}
+        }
     	return true;
-		}
+    }
 
-	}
+}

@@ -29,7 +29,9 @@ class UsersController extends NiceAuthAppController {
 	public $components = array(
 		'Auth' => array(
 			'authenticate' => array(
-				'Form',
+				'Form' => array(
+                    'fields' => array('username' => 'email')
+                ),
 				'NiceAuth.Openid'
 				)
 			),
@@ -69,7 +71,7 @@ class UsersController extends NiceAuthAppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->Auth->userModel = 'User';
-		$this->Auth->allow('*');
+		$this->Auth->allow('register');
 		//Custom Layout for User Controller
 		$this->layout = 'user';
 		}
@@ -120,28 +122,29 @@ class UsersController extends NiceAuthAppController {
 		}
 
     public function register(){
+        $this->layout = 'login';
     	$this->set('groups', $this->Group->find('list'));
         if ($this->request->is('post')) {
-        	$resp = recaptcha_check_answer(Configure::read('NiceAuth.recaptchaPrivate'), $_SERVER["REMOTE_ADDR"], $this->request->data["recaptcha_challenge_field"], $this->request->data["recaptcha_response_field"]);
-        	if ($resp->is_valid) {
+        	//$resp = recaptcha_check_answer(Configure::read('NiceAuth.recaptchaPrivate'), $_SERVER["REMOTE_ADDR"], $this->request->data["recaptcha_challenge_field"], $this->request->data["recaptcha_response_field"]);
+        	if (true) {
 	        	$this->User->create();
 	        	$this->User->set(array(
 	        		'group_id' => Configure::read('NiceAuth.defaultGroup')
 	        		));
 	            if ($this->User->save($this->request->data)) {
 	            	$this->fixAlias();
-	                $this->Session->setFlash(__('You\'r account has been setup.'));
+	                $this->Session->setFlash(__('Your account has been setup.'), 'Flash/success');
 	                $newUser = $this->User->read();
 	                $emailVars = array('username' => $newUser['User']['username']);
 	                $this->sendEmail('register', $newUser['User']['email'], $emailVars);
-	                $this->redirect('/me');
+	                $this->redirect('/login');
 	            	}
 	            else {
-	            	$this->Session->setFlash('Unable to create your\'re account. Please try again.');
+	            	$this->Session->setFlash('Unable to create your account. Please try again.', 'Flash/error');
 	            	}
 				}
 			else {
-				$this->Session->setFlash('The Verification Captcha you entered did not match, please try again.');
+				$this->Session->setFlash('The Verification Captcha you entered did not match, please try again.', 'Flash/error');
 				}
         	}
         elseif ($this->request->is('get')) {
@@ -162,7 +165,7 @@ class UsersController extends NiceAuthAppController {
 					$this->redirect('/me');
 					}
 				else {
-					$this->Session->setFlash('This email address already exists, please try logging in instead.');
+					$this->Session->setFlash('This email address already exists, please try logging in instead.', 'Flash/error');
 					}
         		}
         	}
@@ -172,10 +175,10 @@ class UsersController extends NiceAuthAppController {
         $this->layout = 'login';
         if ($this->request->is('post') || ($this->request->is('get') && isset($this->request->query['openid_mode']))) {
 			if ($this->Auth->login()) {
-				$this->redirect($this->Auth->redirect());
+				$this->redirect(array('plugin' => false, 'controller' => 'devices', 'action' => 'index', 'admin' => true));
 				}
 			else {
-				$this->Session->setFlash(__('Invalid username or password, try again'));
+				$this->Session->setFlash(__('Invalid username or password.'), 'Flash/error');
 				}
 			}
     	}
@@ -195,10 +198,10 @@ class UsersController extends NiceAuthAppController {
 			}
     	}
 
-    public function logout(){
-        $this->Session->setFlash('You have been successfully logged out.');
-        $this->redirect($this->Auth->logout());
-    }
+    public function logout() {
+        $this->Auth->logout();
+        //$this->Session->setFlash('You have been successfully logged out.');
+        $this->redirect('/');
+	}
 }
-
 ?>
